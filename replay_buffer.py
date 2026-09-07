@@ -48,19 +48,19 @@ class ReplayBuffer ():
             self.buffer_full = True
         # modular arithmetic to keep index circular
         self.index = (self.index + 1) % self.n_experiences
-        print("index: ", self.index)
+        #print("index: ", self.index)
 
-    def sample_experience (self):
+    def sample_experience(self, samples):
         idx = self.index
         if self.buffer_full:
             idx = self.n_experiences - 1
 
 
-        return (np.random.choice(self.states[:idx + 1], size = 1, replace=True),
-                np.random.choice(self.actions[:idx + 1], size = 1, replace=True),
-                np.random.choice(self.next_states[:idx + 1], size = 1, replace=True),
-                np.random.choice(self.rewards[:idx + 1], size = 1, replace=True),
-                np.random.choice(self.dones[:idx + 1], size = 1, replace=True))
+        return (torch.from_numpy(np.random.choice(self.states[:idx + 1],      size=samples, replace=True)),
+                torch.from_numpy(np.random.choice(self.actions[:idx + 1],     size=samples, replace=True)),
+                torch.from_numpy(np.random.choice(self.next_states[:idx + 1], size=samples, replace=True)),
+                torch.from_numpy(np.random.choice(self.rewards[:idx + 1],     size=samples, replace=True)),
+                torch.from_numpy(np.random.choice(self.dones[:idx + 1],       size=samples, replace=True)))
         
         
 

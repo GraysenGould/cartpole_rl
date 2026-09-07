@@ -1,5 +1,6 @@
 import gymnasium as gym
 from replay_buffer import ReplayBuffer, Experience
+from agent import Agent
 
 
 class TrainAgent ():
@@ -11,32 +12,34 @@ class TrainAgent ():
         self.n_episodes = 5000
         self.discount = 0.99
         self.learning_rate = 0.01
-        self.replay_buffer = ReplayBuffer(1000)
+        
+        self.agent = Agent()
 
     def training_loop (self):
         env = gym.make("CartPole-v1", render_mode="human", max_episode_steps=500)
         #env = gym.make("CartPole-v1", max_episode_steps=500)
 
-        total_reward = 0
+        scores = []
         for ep in range(self.n_episodes):
-            observation, info = env.reset()
-            # simulate first step
-            observation, reward, terminated, truncated, info = env.step(0)
-            episode_over = False
-            while not episode_over:
+            state, info = env.reset()
+            total_reward = 0
+            done = False
+            while not done:
 
-                state = observation
-                action = env.action_space.sample()
-                observation, reward, terminated, truncated, info = env.step(action)
+                action = self.agent.act(state)
+                #print("action: ", action.item())
+                new_state, reward, terminated, truncated, info = env.step(action.item())
                 done = terminated or truncated
-                self.replay_buffer.add_experience(state, action, observation, reward, done)
 
+                self.agent.step(state, action, new_state, reward, done)
+                
+                #print("output of step: ", new_state, reward, terminated, truncated, info)
 
-                print("action: ", action)
-                print("output of step: ", observation, reward, terminated, truncated, info)
+                state = new_state
                 total_reward += reward
-                episode_over = terminated or truncated
-
+            
+            print("score: ", total_reward)
+            scores.append(total_reward)
 
         env.close()
 
