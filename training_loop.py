@@ -10,9 +10,7 @@ class TrainAgent ():
         # ------- Hyperparameters -------
         #maximum number of steps
         self.max_t = 1000
-        self.n_episodes = 500
-        self.discount = 0.99
-        
+        self.n_episodes = 5000
         self.agent = Agent()
 
     def training_loop (self):
@@ -25,9 +23,7 @@ class TrainAgent ():
             total_reward = 0
             done = False
             while not done:
-
                 action = self.agent.act(state)
-                #print("action: ", action.item())
                 new_state, reward, terminated, truncated, info = env.step(action)
                 done = terminated or truncated
 
@@ -38,6 +34,8 @@ class TrainAgent ():
                 state = new_state
                 total_reward += reward
             
+            self.agent.decay_epsilon()
+
             print("score: ", total_reward)
             scores.append(total_reward)
 

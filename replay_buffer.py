@@ -21,7 +21,7 @@ class ReplayBuffer ():
         self.n_experiences = n_experiences
 
         self.states = np.zeros((n_experiences, 4), np.float32)
-        self.actions = np.zeros((n_experiences, 2), np.float32)
+        self.actions = np.zeros((n_experiences, 1), np.float32)
         self.next_states = np.zeros((n_experiences, 4), np.float32)
         self.rewards = np.zeros((n_experiences, 1), np.float32)
         self.dones = np.zeros((n_experiences, 1), np.int8)
@@ -33,16 +33,11 @@ class ReplayBuffer ():
 
     # Take in an experience in the form ()
     def add_experience(self, state, action: float, next_state, reward: float, done: bool) -> None:
-        action_array = [
-            0 if action == 0 else 1,
-            1 if action == 0 else 0
-        ]
-
-        np.insert(self.states, self.index, state)
-        np.insert(self.actions, self.index, action_array)
-        np.insert(self.next_states, self.index, next_state)
-        np.insert(self.rewards, self.index, reward)
-        np.insert(self.dones, self.index, done)
+        self.states[self.index] = state
+        self.actions[self.index] = action
+        self.next_states[self.index] = next_state
+        self.rewards[self.index] = reward
+        self.dones[self.index] = done
 
         if self.index == self.n_experiences - 1:
             self.buffer_full = True
