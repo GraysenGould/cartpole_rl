@@ -24,7 +24,7 @@ class ReplayBuffer ():
         self.actions = np.zeros((n_experiences, 2), np.float32)
         self.next_states = np.zeros((n_experiences, 4), np.float32)
         self.rewards = np.zeros((n_experiences, 1), np.float32)
-        self.dones = np.zeros((n_experiences, 1), np.bool_)
+        self.dones = np.zeros((n_experiences, 1), np.int8)
 
         # Index at which to add data. Circular index. Override old values
         self.index = 0
@@ -51,16 +51,19 @@ class ReplayBuffer ():
         #print("index: ", self.index)
 
     def sample_experience(self, samples):
-        idx = self.index
+        max_idx = self.index
         if self.buffer_full:
-            idx = self.n_experiences - 1
+            max_idx = self.n_experiences - 1
+
+        
+        sample_idx = np.random.choice(max_idx + 1, size=samples, replace=True)
 
 
-        return (torch.from_numpy(np.random.choice(self.states[:idx + 1],      size=samples, replace=True)),
-                torch.from_numpy(np.random.choice(self.actions[:idx + 1],     size=samples, replace=True)),
-                torch.from_numpy(np.random.choice(self.next_states[:idx + 1], size=samples, replace=True)),
-                torch.from_numpy(np.random.choice(self.rewards[:idx + 1],     size=samples, replace=True)),
-                torch.from_numpy(np.random.choice(self.dones[:idx + 1],       size=samples, replace=True)))
+        return (torch.from_numpy(self.states[sample_idx]),
+                torch.from_numpy(self.actions[sample_idx]),
+                torch.from_numpy(self.next_states[sample_idx]),
+                torch.from_numpy(self.rewards[sample_idx]),
+                torch.from_numpy(self.dones[sample_idx]))
         
         
 
