@@ -12,7 +12,7 @@ class Agent ():
         self.model = QNeuralNetwork().to(device)
         self.target_model = QNeuralNetwork().to(device)
         self.target_model.load_state_dict(self.model.state_dict())
-        self.replay_buffer = ReplayBuffer(100000)
+        self.replay_buffer = ReplayBuffer(10000)
         self.sample_size = 64
         self.criterion = torch.nn.MSELoss()
         self.learning_rate = 5e-4
@@ -21,13 +21,13 @@ class Agent ():
         self.epsilon_decay = 0.995
         self.epsilon = self.epsilon_start
         self.gamma = 0.99 # discount factor
-        self.tau = 1e-3 # soft replacement rate
+        self.tau = 1e-2 # soft replacement rate
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         #number of steps at which to learn
         self.t_step = 0
         self.learn_interval = 4
         # Represents C, the iteration interval to update the target network
-        self.refresh_interval = 50
+        self.refresh_interval = 30
         self.learning_iteration = 0
 
 
@@ -39,11 +39,11 @@ class Agent ():
 
         self.t_step += 1
 
-    def act (self, observation):
+    def act (self, observation, learning: bool = True):
         action = self.model.forward(torch.from_numpy(observation))
 
         # choose a random value with a probability epsilon
-        if random.random() < self.epsilon:
+        if random.random() < self.epsilon and learning:
             return random.choice([0, 1])
 
         return torch.argmax(action).item()
@@ -59,7 +59,12 @@ class Agent ():
 
         states, actions, next_states, rewards, dones = self.replay_buffer.sample_experience(self.sample_size)
 
-        Q_targets_next = self.target_model(next_states).detach().max(1)[0].unsqueeze(1)
+        # for DDQN, use targe
+        Q_next_argmax = self.model(next_states).detach().argmax(1, keepdim=True)
+        Q_targets_next = self.target_model(next_states).detach().gather(1, Q_next_argmax) 
+
+        #print(f"x: {Q_target_argmax}, type: {type(Q_target_argmax)}")
+        #print(f"x: {Q_targets_next}, type: {type(Q_targets_next)}")
 
         Q_targets = rewards + (self.gamma * Q_targets_next * (1 - dones))
 
@@ -75,13 +80,13 @@ class Agent ():
         self.soft_update(self.model, self.target_model)
 
         # if self.learning_iteration % self.refresh_interval == 0:
-        #     self.update()
+        #     self.hard_update()
         self.learning_iteration += 1 
 
 
     # update target nework weights with main network
     # Run every C cycles
-    def update (self):
+    def hard_update (self):
         self.target_model.load_state_dict(self.model.state_dict())
 
 

@@ -46,7 +46,7 @@ class ReplayBuffer ():
         #print("index: ", self.index)
 
     def sample_experience(self, samples):
-        max_idx = self.index
+        max_idx = self.index - 1
         if self.buffer_full:
             max_idx = self.n_experiences - 1
 
